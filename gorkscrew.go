@@ -43,7 +43,7 @@ func main() {
   if strings.Contains(string(httpResponse), "200") {
     // Drop empty line
     bufReader.ReadLine()
-    go writer(makeReadChan(proxyConn, 1024), os.Stdout)
+    go writer(makeReadChan(bufReader, 1024), os.Stdout)
     writer(makeReadChan(os.Stdin, 1024), proxyConn)
   } else {
     fmt.Printf("Proxy could not open connection to %s\n", destLocation)
@@ -72,7 +72,7 @@ func makeReadChan(r io.Reader, bufSize int) chan []byte {
 }
 
 func writer(from chan []byte, to io.Writer) {
-  {
+  for {
     block := <-from
     to.Write(block)
   }
