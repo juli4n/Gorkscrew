@@ -18,7 +18,7 @@ func main() {
 
   proxyLocation := os.Args[1]
   destLocation := os.Args[2]
- 
+
   var proxyAddress *net.TCPAddr
   var proxyConn *net.TCPConn
   var err os.Error
@@ -37,12 +37,14 @@ func main() {
 
   bufReader := bufio.NewReader(proxyConn)
 
+  // Read HTTP CONNECT response
   httpResponse, _, _ := bufReader.ReadLine()
 
   if strings.Contains(string(httpResponse), "200") {
-      bufReader.ReadLine()
-      go writer(makeReadChan(proxyConn, 1024), os.Stdout)
-      writer(makeReadChan(os.Stdin, 1024), proxyConn)
+    // Drop empty line
+    bufReader.ReadLine()
+    go writer(makeReadChan(proxyConn, 1024), os.Stdout)
+    writer(makeReadChan(os.Stdin, 1024), proxyConn)
   } else {
     fmt.Printf("Proxy could not open connection to %s\n", destLocation)
     os.Exit(-1)
@@ -70,18 +72,8 @@ func makeReadChan(r io.Reader, bufSize int) chan []byte {
 }
 
 func writer(from chan []byte, to io.Writer) {
-  for {
-      block := <-from
-      to.Write(block)
-      /*
-      if line, _, err := from.ReadLine(); err != nil {
-        break
-      } else {
-        if _, err = to.Write(line); err != nil {
-          break
-        } else {
-          to.Write([]byte("\n"))
-        }
-      }*/
+  {
+    block := <-from
+    to.Write(block)
   }
 }
